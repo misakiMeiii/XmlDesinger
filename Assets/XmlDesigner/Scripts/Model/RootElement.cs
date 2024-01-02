@@ -7,5 +7,6 @@ namespace XmlDesigner
         public string Name;
         public string NameSpace;
         public List<ChildElement> ChildElements = new List<ChildElement>();
+        public List<CustomElement> CustomElements = new List<CustomElement>();
     }
 }

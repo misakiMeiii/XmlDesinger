@@ -1,4 +1,5 @@
 ﻿#if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
@@ -117,6 +118,9 @@ namespace XmlDesigner
                     }
                 }
                 GUILayout.EndHorizontal();
+
+                DrawChildElement(rootElement.ChildElements); //绘制子元素
+                CreateChildElementBtn(rootElement.ChildElements);
             }
             EditorGUILayout.EndVertical();
 
@@ -126,7 +130,43 @@ namespace XmlDesigner
                     new Vector2(_xmlDesignerWindow.position.width, 1f));
             GUI.DrawTexture(lineRect, EditorGUIUtility.whiteTexture);
             GUILayout.Space(15);
-            
+        }
+
+        private void DrawChildElement(List<ChildElement> childElements)
+        {
+            GUILayout.BeginVertical();
+            {
+                for (var i = 0; i < childElements.Count; i++)
+                {
+                    var childElement = childElements[i];
+                    GUILayout.BeginHorizontal(GUILayout.Width(300));
+                    {
+                        if (GUILayout.Button("", GlobalStyle.RemoveStyle,GUILayout.Width(20)))
+                        {
+                            childElements.RemoveAt(i);
+                        }
+
+                        if (childElement == null) return;
+                        childElement.Name = GUIComponent.CompactTextField("字段名称", childElement.Name);
+                    }
+                    GUILayout.EndHorizontal();
+                }
+            }
+            GUILayout.EndVertical();
+        }
+
+        private void CreateChildElementBtn(List<ChildElement> childElements)
+        {
+            GUILayout.BeginHorizontal(GUILayout.Width(100));
+            {
+                if (GUILayout.Button("", GlobalStyle.AddStyle,GUILayout.Width(20)))
+                {
+                    childElements.Add(new ChildElement());
+                }
+
+                GUILayout.Label("添加子元素");
+            }
+            GUILayout.EndHorizontal();
         }
     }
 }
