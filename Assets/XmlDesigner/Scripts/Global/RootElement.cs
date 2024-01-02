@@ -4,8 +4,8 @@ namespace XmlDesigner
 {
     public class RootElement
     {
-        public bool IsRoot;
         public string Name;
+        public string NameSpace;
         public List<ChildElement> ChildElements = new List<ChildElement>();
     }
 }
