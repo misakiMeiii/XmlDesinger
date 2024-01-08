@@ -129,6 +129,7 @@ namespace XmlDesigner
                     new Vector2(rootRect.x, rootRect.y + rootRect.height + 15f),
                     new Vector2(_xmlDesignerWindow.position.width, 1f));
             GUI.DrawTexture(lineRect, EditorGUIUtility.whiteTexture);
+
             GUILayout.Space(15);
         }
 
@@ -141,13 +142,30 @@ namespace XmlDesigner
                     var childElement = childElements[i];
                     GUILayout.BeginHorizontal(GUILayout.Width(300));
                     {
-                        if (GUILayout.Button("", GlobalStyle.RemoveStyle,GUILayout.Width(20)))
+                        if (GUILayout.Button("", GlobalStyle.RemoveStyle, GUILayout.Width(20)))
                         {
                             childElements.RemoveAt(i);
                         }
 
                         if (childElement == null) return;
-                        childElement.Name = GUIComponent.CompactTextField("字段名称", childElement.Name);
+
+                        
+                        if (GUILayout.Button("↑", GUILayout.Width(20)))
+                        {
+                            i.MoveElementForward(childElements);
+                            GUIUtility.keyboardControl = 0;
+                        }
+
+                        if (GUILayout.Button("↓", GUILayout.Width(20)))
+                        {
+                            i.MoveElementBackward(childElements);
+                            GUIUtility.keyboardControl = 0;
+                        }
+
+                        childElement.Name = GUIComponent.CompactTextField("字段名称：", childElement.Name);
+                        childElement.IsAttribute = GUIComponent.CompactToggle("是否是属性:",childElement.IsAttribute,40,20);
+                        childElement.ElementType =
+                            (ElementType)GUIComponent.CompactEnumPopup("字段类型：", childElement.ElementType);
                     }
                     GUILayout.EndHorizontal();
                 }
@@ -159,7 +177,7 @@ namespace XmlDesigner
         {
             GUILayout.BeginHorizontal(GUILayout.Width(100));
             {
-                if (GUILayout.Button("", GlobalStyle.AddStyle,GUILayout.Width(20)))
+                if (GUILayout.Button("", GlobalStyle.AddStyle, GUILayout.Width(20)))
                 {
                     childElements.Add(new ChildElement());
                 }

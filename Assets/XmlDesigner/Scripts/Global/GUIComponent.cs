@@ -1,4 +1,5 @@
 ﻿#if UNITY_EDITOR
+using System;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
@@ -69,6 +70,19 @@ namespace XmlDesigner
             }
             GUILayout.EndHorizontal();
             return field;
+        }
+
+        public static Enum CompactEnumPopup(string title, Enum @enum, float totalLength = 200,
+            float fieldLength = 150)
+        {
+            GUILayout.BeginHorizontal(GUILayout.Width(200));
+            {
+                GUILayout.Label(title);
+                GUILayout.Space(5);
+                @enum = EditorGUILayout.EnumPopup(@enum);
+            }
+            GUILayout.EndHorizontal();
+            return @enum;
         }
 
         public static void TipButton(string tip, UnityAction action = null, float size = 16)

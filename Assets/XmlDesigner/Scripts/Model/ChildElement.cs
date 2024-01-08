@@ -7,6 +7,6 @@ namespace XmlDesigner
         public string Name;
         public ElementType ElementType;
         public bool IsAttribute;
-        public List<ChildElement> ChildElements = new List<ChildElement>();
+        public IValue Value;
     }
 }

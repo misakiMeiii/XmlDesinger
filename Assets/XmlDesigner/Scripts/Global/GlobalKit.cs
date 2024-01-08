@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.AnimatedValues;
 using UnityEngine;
@@ -13,7 +14,7 @@ namespace XmlDesigner
             if (string.IsNullOrEmpty(str)) return default(T);
             try
             {
-                var value = (T) Enum.Parse(typeof(T), str);
+                var value = (T)Enum.Parse(typeof(T), str);
                 return value;
             }
             catch
@@ -26,7 +27,7 @@ namespace XmlDesigner
         {
             try
             {
-                return (T) Enum.ToObject(typeof(T), value);
+                return (T)Enum.ToObject(typeof(T), value);
             }
             catch
             {
@@ -283,6 +284,7 @@ namespace XmlDesigner
 
                 return color;
             }
+
             return Color.white;
         }
 
@@ -290,14 +292,41 @@ namespace XmlDesigner
         {
             if (color != null)
             {
-                var r = ((int) (color.r * 255)).ToString();
-                var g = ((int) (color.g * 255)).ToString();
-                var b = ((int) (color.b * 255)).ToString();
-                var a = ((int) (color.a * 255)).ToString();
+                var r = ((int)(color.r * 255)).ToString();
+                var g = ((int)(color.g * 255)).ToString();
+                var b = ((int)(color.b * 255)).ToString();
+                var a = ((int)(color.a * 255)).ToString();
                 return string.Format("{0}{4}{1}{4}{2}{4}{3}", r, g, b, a, split);
             }
 
             return string.Format("255{0}255{0}255{0}255", split);
+        }
+
+
+        // 元素前移方法
+        public static void MoveElementForward<T>(this int index, List<T> list)
+        {
+            if (index < 1 || index >= list.Count)
+            {
+                return;
+            }
+
+            var temp = list[index];
+            list.RemoveAt(index);
+            list.Insert(index - 1, temp);
+        }
+
+        // 元素后移方法
+        public static void MoveElementBackward<T>(this int index, List<T> list)
+        {
+            if (index < 0 || index >= list.Count - 1)
+            {
+                return;
+            }
+
+            var temp = list[index];
+            list.RemoveAt(index);
+            list.Insert(index + 1, temp);
         }
 
         /// <summary>
@@ -374,7 +403,7 @@ namespace XmlDesigner
 
             return false;
         }
-        
+
         /// <summary>
         /// 首字母大写
         /// </summary>
@@ -382,15 +411,15 @@ namespace XmlDesigner
         {
             if (string.IsNullOrEmpty(originStr))
                 return originStr;
-        
+
             var firstChar = originStr[0];
-        
+
             if (char.IsLetter(firstChar) && char.IsLower(firstChar))
             {
                 string capitalized = char.ToUpper(firstChar) + originStr.Substring(1);
                 return capitalized;
             }
-        
+
             return originStr;
         }
     }
