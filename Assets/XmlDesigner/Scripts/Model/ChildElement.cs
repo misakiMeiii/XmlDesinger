@@ -5,8 +5,11 @@ namespace XmlDesigner
     public class ChildElement
     {
         public string Name;
-        public ElementType ElementType;
         public bool IsAttribute;
-        public IValue Value;
+        public ElementType ElementType;
+        public BaseType ReferenceType;
+        public KeyType KeyType;
+        public int CustomType;
+        public string DefaultValue;
     }
 }

@@ -11,6 +11,25 @@
         Queue,
         Stack,
         HashSet,
-        Dictionary
+        Dictionary,
+        Custom
+    }
+
+    public enum BaseType
+    {
+        String,
+        Bool,
+        Int,
+        Double,
+        Float,
+        Custom
+    }
+    
+    public enum KeyType
+    {
+        String,
+        Int,
+        Double,
+        Float
     }
 }

@@ -85,6 +85,19 @@ namespace XmlDesigner
             return @enum;
         }
 
+        public static int CompactPopup(string title, int field, string[] arr, float totalLength = 200,
+            float fieldLength = 150)
+        {
+            GUILayout.BeginHorizontal(GUILayout.Width(200));
+            {
+                GUILayout.Label(title);
+                GUILayout.Space(5);
+                field = EditorGUILayout.Popup(field, arr);
+            }
+            GUILayout.EndHorizontal();
+            return field;
+        }
+
         public static void TipButton(string tip, UnityAction action = null, float size = 16)
         {
             GUILayout.BeginHorizontal(GUILayout.Width(size));

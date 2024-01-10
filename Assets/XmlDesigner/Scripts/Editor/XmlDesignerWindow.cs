@@ -1,5 +1,7 @@
 ﻿#if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
 
@@ -63,6 +65,8 @@ namespace XmlDesigner
 
         private RootElement _rootElement;
 
+        private string[] CustomElementNames => _rootElement.CustomElements.Select(element => element.Name).ToArray();
+
         private void DrawView()
         {
             if (_rootElement == null)
@@ -120,6 +124,7 @@ namespace XmlDesigner
                 GUILayout.EndHorizontal();
 
                 DrawChildElement(rootElement.ChildElements); //绘制子元素
+
                 CreateChildElementBtn(rootElement.ChildElements);
             }
             EditorGUILayout.EndVertical();
@@ -128,9 +133,13 @@ namespace XmlDesigner
                 new Rect(
                     new Vector2(rootRect.x, rootRect.y + rootRect.height + 15f),
                     new Vector2(_xmlDesignerWindow.position.width, 1f));
-            GUI.DrawTexture(lineRect, EditorGUIUtility.whiteTexture);
+            GUI.DrawTexture(lineRect, EditorGUIUtility.whiteTexture); //分割线
 
-            GUILayout.Space(15);
+            GUILayout.Space(20);
+
+            DrawCustomElement(rootElement.CustomElements);
+
+            CreateCustomElementBtn(rootElement.CustomElements); //添加自定义类按钮
         }
 
         private void DrawChildElement(List<ChildElement> childElements)
@@ -149,7 +158,7 @@ namespace XmlDesigner
 
                         if (childElement == null) return;
 
-                        
+
                         if (GUILayout.Button("↑", GUILayout.Width(20)))
                         {
                             i.MoveElementForward(childElements);
@@ -163,9 +172,101 @@ namespace XmlDesigner
                         }
 
                         childElement.Name = GUIComponent.CompactTextField("字段名称：", childElement.Name);
-                        childElement.IsAttribute = GUIComponent.CompactToggle("是否是属性:",childElement.IsAttribute,40,20);
+                        if (string.IsNullOrEmpty(childElement.Name))
+                        {
+                            GUILayout.Label("字段名称不能为空！", GlobalStyle.RedFontStyle);
+                        }
+
+                        childElement.IsAttribute =
+                            GUIComponent.CompactToggle("是否是属性:", childElement.IsAttribute, 40, 20);
                         childElement.ElementType =
-                            (ElementType)GUIComponent.CompactEnumPopup("字段类型：", childElement.ElementType);
+                            (ElementType) GUIComponent.CompactEnumPopup("字段类型：", childElement.ElementType);
+
+                        switch (childElement.ElementType)
+                        {
+                            case ElementType.String:
+                                childElement.DefaultValue =
+                                    GUIComponent.CompactTextField("默认值(可以不设置):", childElement.DefaultValue);
+                                break;
+                            case ElementType.Bool:
+                                childElement.DefaultValue =
+                                    GUIComponent.CompactToggle("默认值(可以不设置):", childElement.DefaultValue.ToBool())
+                                        .ToString();
+                                break;
+                            case ElementType.Int:
+                                childElement.DefaultValue =
+                                    GUIComponent.CompactIntField("默认值(可以不设置):", childElement.DefaultValue.ToInt())
+                                        .ToString();
+                                break;
+                            case ElementType.Double:
+                                childElement.DefaultValue =
+                                    GUIComponent.CompactDoubleField("默认值(可以不设置):", childElement.DefaultValue.ToDouble())
+                                        .ToString();
+                                break;
+                            case ElementType.Float:
+                                childElement.DefaultValue =
+                                    GUIComponent.CompactFloatField("默认值(可以不设置):", childElement.DefaultValue.ToFloat())
+                                        .ToString();
+                                break;
+                            case ElementType.List:
+                                childElement.ReferenceType =
+                                    (BaseType) GUIComponent.CompactEnumPopup("泛型", childElement.ReferenceType);
+                                if (childElement.ReferenceType == BaseType.Custom)
+                                {
+                                    childElement.CustomType = GUIComponent.CompactPopup("类", childElement.CustomType,
+                                        CustomElementNames);
+                                }
+
+                                break;
+                            case ElementType.Queue:
+                                childElement.ReferenceType =
+                                    (BaseType) GUIComponent.CompactEnumPopup("泛型", childElement.ReferenceType);
+                                if (childElement.ReferenceType == BaseType.Custom)
+                                {
+                                    childElement.CustomType = GUIComponent.CompactPopup("类", childElement.CustomType,
+                                        CustomElementNames);
+                                }
+
+                                break;
+                            case ElementType.Stack:
+                                childElement.ReferenceType =
+                                    (BaseType) GUIComponent.CompactEnumPopup("泛型", childElement.ReferenceType);
+                                if (childElement.ReferenceType == BaseType.Custom)
+                                {
+                                    childElement.CustomType = GUIComponent.CompactPopup("类", childElement.CustomType,
+                                        CustomElementNames);
+                                }
+
+                                break;
+                            case ElementType.HashSet:
+                                childElement.ReferenceType =
+                                    (BaseType) GUIComponent.CompactEnumPopup("泛型", childElement.ReferenceType);
+                                if (childElement.ReferenceType == BaseType.Custom)
+                                {
+                                    childElement.CustomType = GUIComponent.CompactPopup("类", childElement.CustomType,
+                                        CustomElementNames);
+                                }
+
+                                break;
+                            case ElementType.Dictionary:
+                                childElement.KeyType =
+                                    (KeyType) GUIComponent.CompactEnumPopup("Key的类型：", childElement.KeyType);
+                                childElement.ReferenceType =
+                                    (BaseType) GUIComponent.CompactEnumPopup("Value的类型：", childElement.ReferenceType);
+                                if (childElement.ReferenceType == BaseType.Custom)
+                                {
+                                    childElement.CustomType = GUIComponent.CompactPopup("类", childElement.CustomType,
+                                        CustomElementNames);
+                                }
+
+                                break;
+                            case ElementType.Custom:
+                                childElement.CustomType = GUIComponent.CompactPopup("类", childElement.CustomType,
+                                    CustomElementNames);
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
                     }
                     GUILayout.EndHorizontal();
                 }
@@ -183,6 +284,61 @@ namespace XmlDesigner
                 }
 
                 GUILayout.Label("添加子元素");
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        private void DrawCustomElement(List<CustomElement> customElements)
+        {
+            for (int i = 0; i < customElements.Count; i++)
+            {
+                var customElement = customElements[i];
+                if (customElement == null) return;
+                var singleRect = EditorGUILayout.BeginVertical();
+                {
+                    GUILayout.BeginHorizontal(GUILayout.Width(50));
+                    {
+                        if (GUILayout.Button("", GlobalStyle.RemoveStyle))
+                        {
+                            customElements.RemoveAt(i);
+                        }
+
+                        GUILayout.Label("删除类");
+                    }
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    {
+                        customElement.Name = GUIComponent.CompactTextField("类名：", customElement.Name);
+                        if (string.IsNullOrEmpty(customElement.Name))
+                        {
+                            GUILayout.Label("类名不能为空！", GlobalStyle.RedFontStyle);
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+                    DrawChildElement(customElement.ChildElements); //绘制子元素
+                    CreateChildElementBtn(customElement.ChildElements);
+                }
+                EditorGUILayout.EndVertical();
+
+                var lineRect =
+                    new Rect(
+                        new Vector2(singleRect.x, singleRect.y + singleRect.height + 15f),
+                        new Vector2(_xmlDesignerWindow.position.width, 1f));
+                GUI.DrawTexture(lineRect, EditorGUIUtility.whiteTexture); //分割线
+                GUILayout.Space(30);
+            }
+        }
+
+        private void CreateCustomElementBtn(List<CustomElement> customElements)
+        {
+            GUILayout.BeginHorizontal(GUILayout.Width(100));
+            {
+                if (GUILayout.Button("", GlobalStyle.AddStyle, GUILayout.Width(20)))
+                {
+                    customElements.Add(new CustomElement());
+                }
+
+                GUILayout.Label("添加自定义类");
             }
             GUILayout.EndHorizontal();
         }

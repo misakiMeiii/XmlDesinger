@@ -14,7 +14,7 @@ namespace XmlDesigner
             if (string.IsNullOrEmpty(str)) return default(T);
             try
             {
-                var value = (T)Enum.Parse(typeof(T), str);
+                var value = (T) Enum.Parse(typeof(T), str);
                 return value;
             }
             catch
@@ -27,7 +27,7 @@ namespace XmlDesigner
         {
             try
             {
-                return (T)Enum.ToObject(typeof(T), value);
+                return (T) Enum.ToObject(typeof(T), value);
             }
             catch
             {
@@ -188,6 +188,26 @@ namespace XmlDesigner
         }
 
 
+        public static int ToInt(this string selfStr, int defaultValue = 0)
+        {
+            return int.TryParse(selfStr, out var retValue) ? retValue : defaultValue;
+        }
+
+        public static float ToFloat(this string selfStr, float defaultValue = 0)
+        {
+            return float.TryParse(selfStr, out var retValue) ? retValue : defaultValue;
+        }
+
+        public static double ToDouble(this string selfStr, double defaultValue = 0)
+        {
+            return double.TryParse(selfStr, out var retValue) ? retValue : defaultValue;
+        }
+
+        public static bool ToBool(this string selfStr, bool defaultValue = false)
+        {
+            return bool.TryParse(selfStr, out var retValue) ? retValue : defaultValue;
+        }
+
         public static string GetCurrentGameObjectWorldPosition(string str)
         {
             var objs = Selection.objects;
@@ -292,10 +312,10 @@ namespace XmlDesigner
         {
             if (color != null)
             {
-                var r = ((int)(color.r * 255)).ToString();
-                var g = ((int)(color.g * 255)).ToString();
-                var b = ((int)(color.b * 255)).ToString();
-                var a = ((int)(color.a * 255)).ToString();
+                var r = ((int) (color.r * 255)).ToString();
+                var g = ((int) (color.g * 255)).ToString();
+                var b = ((int) (color.b * 255)).ToString();
+                var a = ((int) (color.a * 255)).ToString();
                 return string.Format("{0}{4}{1}{4}{2}{4}{3}", r, g, b, a, split);
             }
 
