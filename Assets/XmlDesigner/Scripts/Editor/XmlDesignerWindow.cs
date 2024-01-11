@@ -81,6 +81,8 @@ namespace XmlDesigner
             {
                 _scrollPos = GUILayout.BeginScrollView(_scrollPos, GlobalStyle.Box);
                 {
+                    //todo 完善导出设计功能
+                    CreateXmlDesignerExporter(_rootElement);
                     DrawRootElement(_rootElement);
                 }
                 GUILayout.EndScrollView();
@@ -210,40 +212,40 @@ namespace XmlDesigner
                                 break;
                             case ElementType.List:
                                 childElement.ReferenceType =
-                                    (BaseType) GUIComponent.CompactEnumPopup("泛型", childElement.ReferenceType);
+                                    (BaseType) GUIComponent.CompactEnumPopup("泛型：", childElement.ReferenceType);
                                 if (childElement.ReferenceType == BaseType.Custom)
                                 {
-                                    childElement.CustomType = GUIComponent.CompactPopup("类", childElement.CustomType,
+                                    childElement.CustomType = GUIComponent.CompactPopup("类：", childElement.CustomType,
                                         CustomElementNames);
                                 }
 
                                 break;
                             case ElementType.Queue:
                                 childElement.ReferenceType =
-                                    (BaseType) GUIComponent.CompactEnumPopup("泛型", childElement.ReferenceType);
+                                    (BaseType) GUIComponent.CompactEnumPopup("泛型：", childElement.ReferenceType);
                                 if (childElement.ReferenceType == BaseType.Custom)
                                 {
-                                    childElement.CustomType = GUIComponent.CompactPopup("类", childElement.CustomType,
+                                    childElement.CustomType = GUIComponent.CompactPopup("类：", childElement.CustomType,
                                         CustomElementNames);
                                 }
 
                                 break;
                             case ElementType.Stack:
                                 childElement.ReferenceType =
-                                    (BaseType) GUIComponent.CompactEnumPopup("泛型", childElement.ReferenceType);
+                                    (BaseType) GUIComponent.CompactEnumPopup("泛型：", childElement.ReferenceType);
                                 if (childElement.ReferenceType == BaseType.Custom)
                                 {
-                                    childElement.CustomType = GUIComponent.CompactPopup("类", childElement.CustomType,
+                                    childElement.CustomType = GUIComponent.CompactPopup("类：", childElement.CustomType,
                                         CustomElementNames);
                                 }
 
                                 break;
                             case ElementType.HashSet:
                                 childElement.ReferenceType =
-                                    (BaseType) GUIComponent.CompactEnumPopup("泛型", childElement.ReferenceType);
+                                    (BaseType) GUIComponent.CompactEnumPopup("泛型：", childElement.ReferenceType);
                                 if (childElement.ReferenceType == BaseType.Custom)
                                 {
-                                    childElement.CustomType = GUIComponent.CompactPopup("类", childElement.CustomType,
+                                    childElement.CustomType = GUIComponent.CompactPopup("类：", childElement.CustomType,
                                         CustomElementNames);
                                 }
 
@@ -255,13 +257,13 @@ namespace XmlDesigner
                                     (BaseType) GUIComponent.CompactEnumPopup("Value的类型：", childElement.ReferenceType);
                                 if (childElement.ReferenceType == BaseType.Custom)
                                 {
-                                    childElement.CustomType = GUIComponent.CompactPopup("类", childElement.CustomType,
+                                    childElement.CustomType = GUIComponent.CompactPopup("类：", childElement.CustomType,
                                         CustomElementNames);
                                 }
 
                                 break;
                             case ElementType.Custom:
-                                childElement.CustomType = GUIComponent.CompactPopup("类", childElement.CustomType,
+                                childElement.CustomType = GUIComponent.CompactPopup("类：", childElement.CustomType,
                                     CustomElementNames);
                                 break;
                             default:
@@ -341,6 +343,11 @@ namespace XmlDesigner
                 GUILayout.Label("添加自定义类");
             }
             GUILayout.EndHorizontal();
+        }
+
+        private void CreateXmlDesignerExporter(RootElement rootElement)
+        {
+            
         }
     }
 }
