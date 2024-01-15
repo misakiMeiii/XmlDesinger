@@ -1,6 +1,7 @@
 ﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
@@ -12,10 +13,15 @@ namespace XmlDesigner
         private static EditorWindow _xmlDesignerWindow;
         private static bool Opening { get; set; }
         private bool _isFinishedInit;
-        public static string Compiling = "编译中...";
+        private const string Compiling = "编译中...";
 
         private static readonly string WindowTitle = "xml设计/生成器";
         private static readonly Rect WindowRect = new Rect(50, 100, 1600, 600);
+
+        private RootElement _rootElement;
+        private string[] CustomElementNames => _rootElement.CustomElements.Select(element => element.Name).ToArray();
+
+        private string _exportXmlDesignPath;
 
         [MenuItem("XmlDesigner/Tool &T", false, 1)]
         public static void OnClickWindow()
@@ -40,9 +46,19 @@ namespace XmlDesigner
             Opening = false;
         }
 
+        private void OnEnable()
+        {
+            Init();
+            _isFinishedInit = true;
+        }
+
         private void Init()
         {
+            _exportXmlDesignPath = string.IsNullOrEmpty(nameof(_exportXmlDesignPath).GetString())
+                ? Application.dataPath
+                : nameof(_exportXmlDesignPath).GetString();
         }
+
 
         private Vector2 _scrollPos;
 
@@ -54,18 +70,11 @@ namespace XmlDesigner
                 return;
             }
 
-            if (!_isFinishedInit)
-            {
-                Init();
-                _isFinishedInit = true;
-            }
+            if (!_isFinishedInit) return;
 
             DrawView();
         }
 
-        private RootElement _rootElement;
-
-        private string[] CustomElementNames => _rootElement.CustomElements.Select(element => element.Name).ToArray();
 
         private void DrawView()
         {
@@ -347,7 +356,25 @@ namespace XmlDesigner
 
         private void CreateXmlDesignerExporter(RootElement rootElement)
         {
-            
+            GUILayout.BeginHorizontal();
+            {
+                _exportXmlDesignPath = GUIComponent.CompactTextField("设计文件路径：", _exportXmlDesignPath, 500, 450);
+                GUILayout.Space(5);
+                if (GUILayout.Button("选择路径", GUILayout.Width(80)))
+                {
+                    _exportXmlDesignPath = _exportXmlDesignPath.GetSelectedFolderPath();
+                    nameof(_exportXmlDesignPath).SaveString(_exportXmlDesignPath);
+                }
+
+                if (GUILayout.Button("导出设计", GUILayout.Width(80)))
+                {
+                    var filePath = _exportXmlDesignPath + $"/{rootElement.Name}Design.xml";
+                    DesignerExporter.ExportDesignFile(filePath, rootElement);
+                    Process.Start(_exportXmlDesignPath);
+                    nameof(_exportXmlDesignPath).SaveString(_exportXmlDesignPath);
+                }
+            }
+            GUILayout.EndHorizontal();
         }
     }
 }

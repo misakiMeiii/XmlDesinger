@@ -362,23 +362,30 @@ namespace XmlDesigner
         {
             var fullPath = EditorUtility.OpenFilePanel(title, directory, extension);
             // 最后一个"/" 占据整个路径字符串的索引
-            var lastpath = fullPath.LastIndexOf("/", StringComparison.Ordinal);
+            var lastPath = fullPath.LastIndexOf("/", StringComparison.Ordinal);
             //Debug.Log("Unity xzy :lastpath index:" + lastpath);
             // 最后一个"." 占据整个路径字符串的索引
-            var lastdot = fullPath.LastIndexOf(".", StringComparison.Ordinal);
+            var lastDot = fullPath.LastIndexOf(".", StringComparison.Ordinal);
 
             // 纯文件名字长度
-            var length = lastdot - lastpath - 1;
+            var length = lastDot - lastPath - 1;
 
             // 文件目录字符串 xx/xx/xx/
             //string beginpart = FullPath.Substring(0, lastpath + 1);
             //  纯文件名字
             if (!string.IsNullOrEmpty(fullPath))
             {
-                return fullPath.Substring(lastpath + 1, length);
+                return fullPath.Substring(lastPath + 1, length);
             }
 
             return originStr;
+        }
+        
+        public static string GetSelectedFolderPath(this string originStr)
+        {
+            // 打开一个文件夹选择对话框，并返回选定的文件夹路径
+            var path = EditorUtility.OpenFolderPanel("选择文件夹", "", "");
+            return string.IsNullOrEmpty(path) ? originStr : path;
         }
 #endif
 
