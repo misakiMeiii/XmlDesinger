@@ -24,7 +24,7 @@
         Float,
         Custom
     }
-    
+
     public enum KeyType
     {
         String,
