@@ -5,37 +5,38 @@ namespace XmlDesigner
 {
     public static class DesignerReader
     {
-        public static void ReadDesignFile(string filePath)
+        public static RootElement ReadDesignFile(string filePath)
         {
+            var rootElement = new RootElement();
             var doc = new XmlDocument();
             doc.Load(filePath);
             var rootNode = doc.SelectSingleNode("RootClass");
             if (rootNode == null)
             {
                 Debug.LogError("读取错误，文件根节点必须为RootClass");
+                return null;
             }
-            else
+
+            foreach (XmlNode node in rootNode)
             {
-                var rootElement = new RootElement();
-                foreach (XmlNode node in rootNode)
+                switch (node.Name)
                 {
-                    switch (node.Name)
-                    {
-                        case "Name":
-                            rootElement.Name = node.InnerText;
-                            break;
-                        case "NameSpace":
-                            rootElement.NameSpace = node.InnerText;
-                            break;
-                        case "ChildElement":
-                            rootElement.ChildElements.Add(node.CreateChildElement());
-                            break;
-                        case "CustomElement":
-                            rootElement.CustomElements.Add(node.CreateCustomElement());
-                            break;
-                    }
+                    case "Name":
+                        rootElement.Name = node.InnerText;
+                        break;
+                    case "NameSpace":
+                        rootElement.NameSpace = node.InnerText;
+                        break;
+                    case "ChildElement":
+                        rootElement.ChildElements.Add(node.CreateChildElement());
+                        break;
+                    case "CustomElement":
+                        rootElement.CustomElements.Add(node.CreateCustomElement());
+                        break;
                 }
             }
+
+            return rootElement;
         }
 
         private static CustomElement CreateCustomElement(this XmlNode node)

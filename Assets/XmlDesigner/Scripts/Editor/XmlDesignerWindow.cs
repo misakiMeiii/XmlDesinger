@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
@@ -14,6 +15,8 @@ namespace XmlDesigner
         private static bool Opening { get; set; }
         private bool _isFinishedInit;
         private const string Compiling = "编译中...";
+        private bool _autoRead;
+        private string _lastLoadDesignFilePath;
 
         private static readonly string WindowTitle = "xml设计/生成器";
         private static readonly Rect WindowRect = new Rect(50, 100, 1600, 600);
@@ -57,6 +60,12 @@ namespace XmlDesigner
             _exportXmlDesignPath = string.IsNullOrEmpty(nameof(_exportXmlDesignPath).GetString())
                 ? Application.dataPath
                 : nameof(_exportXmlDesignPath).GetString();
+            _lastLoadDesignFilePath = nameof(_lastLoadDesignFilePath).GetString();
+            _autoRead = nameof(_autoRead).GetBool();
+            if (_autoRead)
+            {
+                LoadDesignFile(_lastLoadDesignFilePath);
+            }
         }
 
 
@@ -83,6 +92,7 @@ namespace XmlDesigner
                 GUILayout.BeginHorizontal();
                 {
                     CreateAddRootBtn();
+                    CreateXmlDesignerReader();
                 }
                 GUILayout.EndHorizontal();
             }
@@ -90,7 +100,7 @@ namespace XmlDesigner
             {
                 _scrollPos = GUILayout.BeginScrollView(_scrollPos, GlobalStyle.Box);
                 {
-                    //todo 完善导出设计功能
+                    CreateXmlDesignerReader();
                     CreateXmlDesignerExporter(_rootElement);
                     DrawRootElement(_rootElement);
                 }
@@ -375,6 +385,36 @@ namespace XmlDesigner
                 }
             }
             GUILayout.EndHorizontal();
+        }
+
+        private void CreateXmlDesignerReader()
+        {
+            GUILayout.BeginHorizontal();
+            {
+                if (GUILayout.Button("读取设计文件", GUILayout.Width(100), GUILayout.Height(30)))
+                {
+                    var filePath = EditorUtility.OpenFilePanel("读取设计文件", "", "xml");
+                    LoadDesignFile(filePath);
+                }
+
+                CreateAutoReadToggle();
+            }
+            GUILayout.EndHorizontal();
+        }
+
+        private void LoadDesignFile(string filePath)
+        {
+            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+            {
+                _rootElement = DesignerReader.ReadDesignFile(filePath);
+                nameof(_lastLoadDesignFilePath).SaveString(filePath);
+            }
+        }
+
+        private void CreateAutoReadToggle()
+        {
+            _autoRead = GUILayout.Toggle(_autoRead, "自动读取上次选择的设计文件", GUILayout.Width(200));
+            nameof(_autoRead).SaveBool(_autoRead);
         }
     }
 }
