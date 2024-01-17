@@ -104,6 +104,7 @@ namespace XmlDesigner
                 _scrollPos = GUILayout.BeginScrollView(_scrollPos, GlobalStyle.Box);
                 {
                     CreateXmlDesignerReader();
+                    CreateCsExporter(_rootElement);
                     CreateXmlDesignerExporter(_rootElement);
                     DrawRootElement(_rootElement);
                 }
@@ -332,7 +333,8 @@ namespace XmlDesigner
                     GUILayout.EndHorizontal();
                     GUILayout.BeginHorizontal();
                     {
-                        customElement.Name = GUIComponent.CompactTextField("类名:", customElement.Name).UpperFirstLetter();
+                        customElement.Name =
+                            GUIComponent.CompactTextField("类名:", customElement.Name).UpperFirstLetter();
                         if (string.IsNullOrEmpty(customElement.Name))
                         {
                             GUILayout.Label("类名不能为空！", GlobalStyle.RedFontStyle);
@@ -434,6 +436,7 @@ namespace XmlDesigner
 
                 if (GUILayout.Button("导出脚本", GUILayout.Width(80)))
                 {
+                    CsExporter.ExportDesignClass(_exportCsPath, rootElement);
                 }
             }
             GUILayout.EndHorizontal();
