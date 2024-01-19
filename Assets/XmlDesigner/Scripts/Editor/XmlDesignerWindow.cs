@@ -204,6 +204,10 @@ namespace XmlDesigner
 
                         childElement.IsAttribute =
                             GUIComponent.CompactToggle("是否是属性:", childElement.IsAttribute, 40, 20);
+                        if (childElement.ElementType > ElementType.Float && childElement.IsAttribute)
+                        {
+                            GUILayout.Label("不支持作为属性！",GlobalStyle.RedFontStyle);
+                        }
                         childElement.ElementType =
                             (ElementType) GUIComponent.CompactEnumPopup("字段类型:", childElement.ElementType);
 

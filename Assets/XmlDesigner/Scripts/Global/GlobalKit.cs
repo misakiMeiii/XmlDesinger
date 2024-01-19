@@ -380,7 +380,7 @@ namespace XmlDesigner
 
             return originStr;
         }
-        
+
         public static string GetSelectedFolderPath(this string originStr)
         {
             // 打开一个文件夹选择对话框，并返回选定的文件夹路径
@@ -444,6 +444,25 @@ namespace XmlDesigner
             if (char.IsLetter(firstChar) && char.IsLower(firstChar))
             {
                 string capitalized = char.ToUpper(firstChar) + originStr.Substring(1);
+                return capitalized;
+            }
+
+            return originStr;
+        }
+
+        /// <summary>
+        /// 首字母小写
+        /// </summary>
+        public static string LowerFirstLetter(this string originStr)
+        {
+            if (string.IsNullOrEmpty(originStr))
+                return originStr;
+
+            var firstChar = originStr[0];
+
+            if (char.IsLetter(firstChar) && char.IsUpper(firstChar))
+            {
+                string capitalized = char.ToLower(firstChar) + originStr.Substring(1);
                 return capitalized;
             }
 
