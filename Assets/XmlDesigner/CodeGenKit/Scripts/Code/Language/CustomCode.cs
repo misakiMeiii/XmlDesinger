@@ -1,7 +1,7 @@
 ﻿namespace CodeGenKit
 {
     /// <summary>
-    /// 自定义代码生成
+    /// 自定义代码生成带缩进
     /// </summary>
     public class CustomCode : ICode
     {

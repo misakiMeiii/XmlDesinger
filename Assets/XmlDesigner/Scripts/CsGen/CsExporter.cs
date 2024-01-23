@@ -1,8 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
-using System.Text;
 using CodeGenKit;
-using UnityEngine;
 
 namespace XmlDesigner
 {
@@ -45,10 +44,11 @@ namespace XmlDesigner
                     }
                 });
 
-            var stringBuilder = new StringBuilder();
-            var codeWriter = new StringCodeWriter(stringBuilder);
+            var filePath = folderPath + $"/{rootElement.Name}DataView.cs";
+            var writer = File.CreateText(filePath);
+            var codeWriter = new FileCodeWriter(writer);
             rootCode.Gen(codeWriter);
-            Debug.Log(stringBuilder.ToString());
+            codeWriter.Dispose();
         }
 
         public static void ExportSerializedClass(string folderPath, RootElement rootElement)
@@ -57,6 +57,7 @@ namespace XmlDesigner
                 .Using("System")
                 .Using("System.Collections.Generic")
                 .Using("System.Xml")
+                .Using("UnityEngine")
                 .EmptyLine()
                 .Namespace(rootElement.NameSpace,
                     ns =>
@@ -67,42 +68,63 @@ namespace XmlDesigner
                             {
                                 var customElement = rootElement.CustomElements[index];
                                 classScope.CustomScope(
-                                    $"public {customElement.Name} Get{customElement.Name}Data (XmlNode node)", false,
+                                    $"public {customElement.Name} Get{customElement.Name}Data(XmlNode node)", false,
                                     function =>
                                     {
                                         function.Custom(
-                                            $"var {customElement.Name.LowerFirstLetter()} = new {customElement}();");
+                                            $"var {customElement.Name.LowerFirstLetter()} = new {customElement.Name}();");
                                         if (customElement.ChildElements.Any(element => element.IsAttribute)) //读取属性部分
                                         {
                                             function.Custom("XmlAttribute attr = null;");
+                                            foreach (var childElement in customElement.ChildElements.Where(
+                                                         element =>
+                                                             element.IsAttribute))
+                                            {
+                                                function.Custom(
+                                                    $"attr = node.Attributes[\"{childElement.Name}\"];");
+                                                function.CustomScope("if (attr != null)", false,
+                                                    css =>
+                                                    {
+                                                        css.Custom(childElement.AttributeElementSerialize(
+                                                            customElement));
+                                                    });
+                                            }
+                                        }
+
+                                        if (customElement.ChildElements.Any(element => !element.IsAttribute)) //读取节点部分
+                                        {
                                             function.CustomScope("foreach (XmlNode childNode in node)", false,
                                                 scope =>
                                                 {
-                                                    foreach (var childElement in customElement.ChildElements.Where(
-                                                                 element =>
-                                                                     element.IsAttribute))
-                                                    {
-                                                        scope.Custom(
-                                                            $"attr = node.Attributes[{childElement.Name}];");
-                                                        scope.CustomScope("if(attr != null)", false,
-                                                            css =>
+                                                    scope.CustomScope("switch (childNode.Name)", false,
+                                                        ccs =>
+                                                        {
+                                                            foreach (var childElement in customElement.ChildElements
+                                                                         .Where(
+                                                                             element =>
+                                                                                 !element.IsAttribute))
                                                             {
-                                                                css.Custom(childElement.AttributeElementSerialize(
-                                                                    customElement));
-                                                            });
-                                                    }
+                                                                ccs.Custom($"case \"{childElement.Name}\":");
+                                                                ccs.NodeElementSerialize(childElement, customElement,
+                                                                    rootElement);
+                                                                ccs.TabCustom("break;");
+                                                            }
+                                                        });
                                                 });
                                         }
+
+                                        function.Custom($"return {customElement.Name.LowerFirstLetter()};");
                                     });
                             }
                         });
                     });
 
 
-            var stringBuilder = new StringBuilder();
-            var codeWriter = new StringCodeWriter(stringBuilder);
+            var filePath = folderPath + $"/{rootElement.Name}DataManager.cs";
+            var writer = File.CreateText(filePath);
+            var codeWriter = new FileCodeWriter(writer);
             rootCode.Gen(codeWriter);
-            Debug.Log(stringBuilder.ToString());
+            codeWriter.Dispose();
         }
 
         private static string GetElementTypeName(this ChildElement childElement, RootElement rootElement)
@@ -213,7 +235,7 @@ namespace XmlDesigner
 
             return string.Empty;
         }
-        
+
         private static string AttributeElementSerialize(this ChildElement childElement, CustomElement customElement)
         {
             string elementStr;
@@ -243,6 +265,243 @@ namespace XmlDesigner
             }
 
             return elementStr;
+        }
+
+        private static void NodeElementSerialize(this ICodeScope self, ChildElement childElement,
+            CustomElement customElement,
+            RootElement rootElement)
+        {
+            var elementStr = string.Empty;
+            switch (childElement.ElementType)
+            {
+                case ElementType.String:
+                    elementStr = $"{customElement.Name.LowerFirstLetter()}.{childElement.Name} = childNode.InnerXml;";
+                    break;
+                case ElementType.Bool:
+                    elementStr =
+                        $"{customElement.Name.LowerFirstLetter()}.{childElement.Name} = Convert.ToBoolean(childNode.InnerXml);";
+                    break;
+                case ElementType.Int:
+                    elementStr =
+                        $"{customElement.Name.LowerFirstLetter()}.{childElement.Name} = Convert.ToInt32(childNode.InnerXml);";
+                    break;
+                case ElementType.Double:
+                    elementStr =
+                        $"{customElement.Name.LowerFirstLetter()}.{childElement.Name} = Convert.ToDouble(childNode.InnerXml);";
+                    break;
+                case ElementType.Float:
+                    elementStr =
+                        $"{customElement.Name.LowerFirstLetter()}.{childElement.Name} = Convert.ToSingle(childNode.InnerXml);";
+                    break;
+                case ElementType.List:
+                    switch (childElement.ReferenceType)
+                    {
+                        case BaseType.String:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(childNode.InnerXml);";
+                            break;
+                        case BaseType.Bool:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToBoolean(childNode.InnerXml));";
+                            break;
+                        case BaseType.Int:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToInt32(childNode.InnerXml));";
+                            break;
+                        case BaseType.Double:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToDouble(childNode.InnerXml));";
+                            break;
+                        case BaseType.Float:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToSingle(childNode.InnerXml));";
+                            break;
+                        case BaseType.Custom:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode));";
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    break;
+                case ElementType.Queue:
+                    switch (childElement.ReferenceType)
+                    {
+                        case BaseType.String:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(childNode.InnerXml);";
+                            break;
+                        case BaseType.Bool:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(Convert.ToBoolean(childNode.InnerXml));";
+                            break;
+                        case BaseType.Int:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(Convert.ToInt32(childNode.InnerXml));";
+                            break;
+                        case BaseType.Double:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(Convert.ToDouble(childNode.InnerXml));";
+                            break;
+                        case BaseType.Float:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(Convert.ToSingle(childNode.InnerXml));";
+                            break;
+                        case BaseType.Custom:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode));";
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    break;
+                case ElementType.Stack:
+                    switch (childElement.ReferenceType)
+                    {
+                        case BaseType.String:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(childNode.InnerXml);";
+                            break;
+                        case BaseType.Bool:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(Convert.ToBoolean(childNode.InnerXml));";
+                            break;
+                        case BaseType.Int:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(Convert.ToInt32(childNode.InnerXml));";
+                            break;
+                        case BaseType.Double:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(Convert.ToDouble(childNode.InnerXml));";
+                            break;
+                        case BaseType.Float:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(Convert.ToSingle(childNode.InnerXml));";
+                            break;
+                        case BaseType.Custom:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode));";
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    break;
+                case ElementType.HashSet:
+                    switch (childElement.ReferenceType)
+                    {
+                        case BaseType.String:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(childNode.InnerXml);";
+                            break;
+                        case BaseType.Bool:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToBoolean(childNode.InnerXml));";
+                            break;
+                        case BaseType.Int:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToInt32(childNode.InnerXml));";
+                            break;
+                        case BaseType.Double:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToDouble(childNode.InnerXml));";
+                            break;
+                        case BaseType.Float:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToSingle(childNode.InnerXml));";
+                            break;
+                        case BaseType.Custom:
+                            elementStr =
+                                $"{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode));";
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    break;
+                case ElementType.Dictionary:
+
+                    string keyContent;
+                    switch (childElement.KeyType)
+                    {
+                        case KeyType.String:
+                            keyContent =
+                                $"childNode.SelectSingleNode(\"{childElement.Name}Key\").InnerText;";
+                            break;
+                        case KeyType.Int:
+                            keyContent =
+                                $"Convert.ToInt32(childNode.SelectSingleNode(\"{childElement.Name}Key\").InnerText);";
+                            break;
+                        case KeyType.Double:
+                            keyContent =
+                                $"Convert.ToDouble(childNode.SelectSingleNode(\"{childElement.Name}Key\").InnerText);";
+                            break;
+                        case KeyType.Float:
+                            keyContent =
+                                $"Convert.ToSingle(childNode.SelectSingleNode(\"{childElement.Name}Key\").InnerText);";
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    string valueContent;
+                    switch (childElement.ReferenceType)
+                    {
+                        case BaseType.String:
+                            valueContent = $"childNode.SelectSingleNode(\"{childElement.Name}Value\").InnerText;";
+                            break;
+                        case BaseType.Bool:
+                            valueContent =
+                                $"Convert.ToBoolean(childNode.SelectSingleNode(\"{childElement.Name}Value\").InnerText);";
+                            break;
+                        case BaseType.Int:
+                            valueContent =
+                                $"Convert.ToInt32(childNode.SelectSingleNode(\"{childElement.Name}Value\").InnerText);";
+                            break;
+                        case BaseType.Double:
+                            valueContent =
+                                $"Convert.ToDouble(childNode.SelectSingleNode(\"{childElement.Name}Value\").InnerText);";
+                            break;
+                        case BaseType.Float:
+                            valueContent =
+                                $"Convert.ToSingle(childNode.SelectSingleNode(\"{childElement.Name}Value\").InnerText);";
+                            break;
+                        case BaseType.Custom:
+                            valueContent =
+                                $"Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode.SelectSingleNode(\"{childElement.Name}Value\"));";
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    self.TabCustom($"var {childElement.Name}Key = {keyContent}");
+                    self.TabCustom($"var {childElement.Name}Value = {valueContent}");
+                    self.TabCustom(
+                        $"if({customElement.Name.LowerFirstLetter()}.{childElement.Name}.ContainsKey({childElement.Name}Key))");
+                    self.TabCustom("{");
+                    self.TabCustom($"\tDebug.LogError(\"key重复无法插入!key:\"+{childElement.Name}Key);");
+                    self.TabCustom("}");
+                    self.TabCustom("else");
+                    self.TabCustom("{");
+                    self.TabCustom(
+                        $"\t{customElement.Name.LowerFirstLetter()}.{childElement.Name}.Add({childElement.Name}Key, {childElement.Name}Value);");
+                    self.TabCustom("}");
+
+                    break;
+                case ElementType.Custom:
+                    elementStr =
+                        $"{customElement.Name.LowerFirstLetter()}.{childElement.Name} = Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode);";
+                    break;
+                default:
+                    return;
+            }
+
+            if (childElement.ElementType != ElementType.Dictionary)
+            {
+                self.TabCustom(elementStr);
+            }
         }
     }
 }
