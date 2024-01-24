@@ -1,8 +1,7 @@
 ﻿namespace XmlDesigner
 {
-    public class ChildElement
+    public class ChildElement : AbstractElement
     {
-        public string Name;
         public bool IsAttribute;
         public ElementType ElementType;
         public BaseType ReferenceType;

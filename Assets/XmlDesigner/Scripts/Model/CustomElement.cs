@@ -2,9 +2,8 @@
 
 namespace XmlDesigner
 {
-    public class CustomElement
+    public class CustomElement : AbstractElement
     {
-        public string Name;
         public List<ChildElement> ChildElements = new List<ChildElement>();
     }
 }

@@ -3,9 +3,8 @@ using System.Linq;
 
 namespace XmlDesigner
 {
-    public class RootElement
+    public class RootElement : AbstractElement
     {
-        public string Name;
         public string NameSpace;
         public string[] CustomElementNames => CustomElements.Select(element => element.Name).ToArray();
         public List<ChildElement> ChildElements = new List<ChildElement>();
