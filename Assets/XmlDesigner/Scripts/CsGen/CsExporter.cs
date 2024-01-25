@@ -86,6 +86,28 @@ namespace XmlDesigner
                                         function.Custom("Debug.LogError(\"找不到文件,路径:\" + filePath);");
                                         function.Custom("return null;");
                                     });
+                                classScope.EmptyLine();
+                                //从string中读取
+                                classScope.CustomScope($"public {rootElement.Name} ReadFromString(string content)",
+                                    false,
+                                    function =>
+                                    {
+                                        function.CustomScope("if (!string.IsNullOrEmpty(content))", false, ccs =>
+                                        {
+                                            ccs.Custom("var doc = new XmlDocument();");
+                                            ccs.Custom("doc.LoadXml(content);");
+                                            ccs.Custom($"var rootNode = doc.SelectSingleNode(\"{rootElement.Name}\");");
+                                            ccs.CustomScope("if (rootNode == null)", false, cs =>
+                                            {
+                                                cs.Custom($"Debug.LogError(\"找不到根节点:{rootElement.Name}\");");
+                                                cs.Custom("return null;");
+                                            });
+                                            ccs.Custom($"return Get{rootElement.Name}Data(rootNode);");
+                                        });
+                                        function.Custom("Debug.LogError(\"读取的内容为空,请检查！\");");
+                                        function.Custom("return null;");
+                                    });
+                                classScope.EmptyLine();
                                 //类解析
                                 CreateClassSerialize(classScope, rootElement);
                             });
@@ -219,7 +241,7 @@ namespace XmlDesigner
                     {
                         function.Custom("XmlAttribute attr = null;");
                         foreach (var childElement in rootElement.ChildElements.Where(
-                                     element =>
+                                     element => 
                                          element.IsAttribute))
                         {
                             function.Custom(
