@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RootClass>
+  <Name>School</Name>
+  <NameSpace>XML</NameSpace>
+  <ChildElement name="ClassDic" isAttribute="False" elementType="Dictionary" referenceType="Custom" keyType="Int" customType="0" defaultValue="" />
+  <CustomElement name="ClassGrade">
+    <ChildElement name="StudentDic" isAttribute="False" elementType="Dictionary" referenceType="Custom" keyType="Int" customType="1" defaultValue="" />
+  </CustomElement>
+  <CustomElement name="Student">
+    <ChildElement name="Name" isAttribute="True" elementType="String" referenceType="String" keyType="String" customType="0" defaultValue="" />
+    <ChildElement name="Age" isAttribute="True" elementType="Int" referenceType="String" keyType="String" customType="0" defaultValue="16" />
+    <ChildElement name="Sex" isAttribute="True" elementType="String" referenceType="String" keyType="String" customType="0" defaultValue="男" />
+  </CustomElement>
+</RootClass>

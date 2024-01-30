@@ -67,7 +67,8 @@ namespace XmlDesigner
                             classScope =>
                             {
                                 //从路径读取
-                                classScope.CustomScope($"public {rootElement.Name} ReadFromFile(string filePath)",
+                                classScope.CustomScope(
+                                    $"public static {rootElement.Name} ReadFromFile(string filePath)",
                                     false,
                                     function =>
                                     {
@@ -88,7 +89,8 @@ namespace XmlDesigner
                                     });
                                 classScope.EmptyLine();
                                 //从string中读取
-                                classScope.CustomScope($"public {rootElement.Name} ReadFromString(string content)",
+                                classScope.CustomScope(
+                                    $"public static {rootElement.Name} ReadFromString(string content)",
                                     false,
                                     function =>
                                     {
@@ -174,7 +176,9 @@ namespace XmlDesigner
             switch (childElement.ElementType)
             {
                 case ElementType.String:
-                    endStr = string.IsNullOrEmpty(childElement.DefaultValue) ? ";" : $" = {childElement.DefaultValue};";
+                    endStr = string.IsNullOrEmpty(childElement.DefaultValue)
+                        ? ";"
+                        : $" =\"{childElement.DefaultValue}\";";
                     break;
                 case ElementType.Bool:
                     endStr = childElement.DefaultValue != "True" ? ";" : " = true;";
@@ -232,16 +236,16 @@ namespace XmlDesigner
 
         private static void CreateClassSerialize(ICodeScope classScope, RootElement rootElement)
         {
-            classScope.CustomScope($"public {rootElement.Name} Get{rootElement.Name}Data(XmlNode node)", false,
+            classScope.CustomScope($"public static {rootElement.Name} Get{rootElement.Name}Data(XmlNode node)", false,
                 function =>
                 {
                     function.Custom(
                         $"var {rootElement.Name.LowerFirstLetter()} = new {rootElement.Name}();");
                     if (rootElement.ChildElements.Any(element => element.IsAttribute)) //读取属性部分
                     {
-                        function.Custom("XmlAttribute attr = null;");
+                        function.Custom("XmlAttribute attr;");
                         foreach (var childElement in rootElement.ChildElements.Where(
-                                     element => 
+                                     element =>
                                          element.IsAttribute))
                         {
                             function.Custom(
@@ -283,14 +287,14 @@ namespace XmlDesigner
             foreach (var customElement in rootElement.CustomElements)
             {
                 classScope.CustomScope(
-                    $"public {customElement.Name} Get{customElement.Name}Data(XmlNode node)", false,
+                    $"public static {customElement.Name} Get{customElement.Name}Data(XmlNode node)", false,
                     function =>
                     {
                         function.Custom(
                             $"var {customElement.Name.LowerFirstLetter()} = new {customElement.Name}();");
                         if (customElement.ChildElements.Any(element => element.IsAttribute)) //读取属性部分
                         {
-                            function.Custom("XmlAttribute attr = null;");
+                            function.Custom("XmlAttribute attr;");
                             foreach (var childElement in customElement.ChildElements.Where(
                                          element =>
                                              element.IsAttribute))
@@ -573,12 +577,12 @@ namespace XmlDesigner
                             throw new ArgumentOutOfRangeException();
                     }
 
-                    self.TabCustom($"var {childElement.Name}Key = {keyContent}");
-                    self.TabCustom($"var {childElement.Name}Value = {valueContent}");
+                    self.TabCustom($"var {childElement.Name.LowerFirstLetter()}Key = {keyContent}");
+                    self.TabCustom($"var {childElement.Name.LowerFirstLetter()}Value = {valueContent}");
                     self.TabCustom(
                         $"if ({parentElement.Name.LowerFirstLetter()}.{childElement.Name}.ContainsKey({childElement.Name}Key))");
                     self.TabCustom("{");
-                    self.TabCustom($"\tDebug.LogError(\"key重复无法插入!key:\"+{childElement.Name}Key);");
+                    self.TabCustom($"\tDebug.LogError(\"key重复无法插入!key:\" + {childElement.Name}Key);");
                     self.TabCustom("}");
                     self.TabCustom("else");
                     self.TabCustom("{");

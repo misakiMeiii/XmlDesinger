@@ -6,14 +6,16 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.Callbacks;
 
 namespace XmlDesigner
 {
+    [InitializeOnLoad]
     public class XmlDesignerWindow : EditorWindow
     {
         private static EditorWindow _xmlDesignerWindow;
-        private static bool Opening { get; set; }
-        private bool _isFinishedInit;
+        public static bool Opening { get; set; }
+        public bool IsFinishedInit { get; private set; }
         private const string Compiling = "编译中...";
         private bool _autoRead;
         private string _lastLoadDesignFilePath;
@@ -26,22 +28,43 @@ namespace XmlDesigner
         private string _exportXmlDesignPath;
         private string _exportCsPath;
 
+        static XmlDesignerWindow()
+        {
+            _xmlDesignerWindow = null;
+        }
+
         [MenuItem("XmlDesigner/Tool &T", false, 1)]
         public static void OnClickWindow()
         {
             _xmlDesignerWindow = GetWindow<XmlDesignerWindow>();
             if (Opening)
             {
-                _xmlDesignerWindow.Close();
                 Opening = false;
+                _xmlDesignerWindow.Close();
             }
             else
             {
                 _xmlDesignerWindow.titleContent = new GUIContent(WindowTitle);
                 _xmlDesignerWindow.position = WindowRect;
-                _xmlDesignerWindow.Show();
                 Opening = true;
+                _xmlDesignerWindow.Show();
             }
+        }
+
+        [DidReloadScripts]
+        public static void Reload()
+        {
+            if (Opening)
+            {
+                _xmlDesignerWindow = GetWindow<XmlDesignerWindow>();
+                _xmlDesignerWindow.titleContent = new GUIContent(WindowTitle);
+            }
+        }
+        
+        public static bool IsMyCustomEditorWindowOpen()
+        {
+            var window = GetWindow<XmlDesignerWindow>(false); // false参数表示不创建新窗口
+            return window != null && window.hasFocus;
         }
 
         private void OnDestroy()
@@ -49,11 +72,6 @@ namespace XmlDesigner
             Opening = false;
         }
 
-        private void OnEnable()
-        {
-            Init();
-            _isFinishedInit = true;
-        }
 
         private void Init()
         {
@@ -74,15 +92,23 @@ namespace XmlDesigner
 
         private Vector2 _scrollPos;
 
+
         private void OnGUI()
         {
             if (EditorApplication.isCompiling)
             {
                 GUILayout.Label(Compiling);
+                IsFinishedInit = false;
                 return;
             }
 
-            if (!_isFinishedInit) return;
+            if (!IsFinishedInit)
+            {
+                Init();
+                IsFinishedInit = true;
+            }
+
+            if (!IsFinishedInit) return;
 
             DrawView();
         }
@@ -94,7 +120,7 @@ namespace XmlDesigner
             {
                 GUILayout.BeginHorizontal();
                 {
-                    CreateAddRootBtn();
+                    CreateAddRootBtn("添加根节点");
                     CreateXmlDesignerReader();
                 }
                 GUILayout.EndHorizontal();
@@ -103,7 +129,12 @@ namespace XmlDesigner
             {
                 _scrollPos = GUILayout.BeginScrollView(_scrollPos, GlobalStyle.Box);
                 {
-                    CreateXmlDesignerReader();
+                    GUILayout.BeginHorizontal();
+                    {
+                        CreateAddRootBtn("新建根节点");
+                        CreateXmlDesignerReader();
+                    }
+                    GUILayout.EndHorizontal();
                     CreateCsExporter(_rootElement);
                     CreateXmlDesignerExporter(_rootElement);
                     DrawRootElement(_rootElement);
@@ -112,9 +143,9 @@ namespace XmlDesigner
             }
         }
 
-        private void CreateAddRootBtn()
+        private void CreateAddRootBtn(string titleStr)
         {
-            if (GUILayout.Button("添加根节点", GUILayout.Width(100), GUILayout.Height(30)))
+            if (GUILayout.Button(titleStr, GUILayout.Width(100), GUILayout.Height(30)))
             {
                 _rootElement = new RootElement
                 {
