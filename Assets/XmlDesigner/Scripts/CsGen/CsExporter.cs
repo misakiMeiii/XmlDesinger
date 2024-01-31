@@ -178,19 +178,19 @@ namespace XmlDesigner
                 case ElementType.String:
                     endStr = string.IsNullOrEmpty(childElement.DefaultValue)
                         ? ";"
-                        : $" =\"{childElement.DefaultValue}\";";
+                        : $" = \"{childElement.DefaultValue}\";";
                     break;
                 case ElementType.Bool:
                     endStr = childElement.DefaultValue != "True" ? ";" : " = true;";
                     break;
                 case ElementType.Int:
-                    endStr = childElement.DefaultValue.ToInt() == 0 ? ";" : $"= {childElement.DefaultValue};";
+                    endStr = childElement.DefaultValue.ToInt() == 0 ? ";" : $" = {childElement.DefaultValue};";
                     break;
                 case ElementType.Double:
-                    endStr = childElement.DefaultValue.ToDouble() == 0 ? ";" : $"= {childElement.DefaultValue};";
+                    endStr = childElement.DefaultValue.ToDouble() == 0 ? ";" : $" = {childElement.DefaultValue};";
                     break;
                 case ElementType.Float:
-                    endStr = childElement.DefaultValue.ToFloat() == 0 ? ";" : $"= {childElement.DefaultValue};";
+                    endStr = childElement.DefaultValue.ToFloat() == 0 ? ";" : $" = {childElement.DefaultValue};";
                     break;
                 case ElementType.List:
                     endStr = $" = new List<{childElement.GetReferenceTypeName(rootElement)}>();";
@@ -580,14 +580,15 @@ namespace XmlDesigner
                     self.TabCustom($"var {childElement.Name.LowerFirstLetter()}Key = {keyContent}");
                     self.TabCustom($"var {childElement.Name.LowerFirstLetter()}Value = {valueContent}");
                     self.TabCustom(
-                        $"if ({parentElement.Name.LowerFirstLetter()}.{childElement.Name}.ContainsKey({childElement.Name}Key))");
+                        $"if ({parentElement.Name.LowerFirstLetter()}.{childElement.Name}.ContainsKey({childElement.Name.LowerFirstLetter()}Key))");
                     self.TabCustom("{");
-                    self.TabCustom($"\tDebug.LogError(\"key重复无法插入!key:\" + {childElement.Name}Key);");
+                    self.TabCustom(
+                        $"\tDebug.LogError(\"key重复无法插入!key:\" + {childElement.Name.LowerFirstLetter()}Key);");
                     self.TabCustom("}");
                     self.TabCustom("else");
                     self.TabCustom("{");
                     self.TabCustom(
-                        $"\t{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add({childElement.Name}Key, {childElement.Name}Value);");
+                        $"\t{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add({childElement.Name.LowerFirstLetter()}Key, {childElement.Name.LowerFirstLetter()}Value);");
                     self.TabCustom("}");
 
                     break;

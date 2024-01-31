@@ -4,7 +4,7 @@
   <NameSpace>XML</NameSpace>
   <ChildElement name="ClassDic" isAttribute="False" elementType="Dictionary" referenceType="Custom" keyType="Int" customType="0" defaultValue="" />
   <CustomElement name="ClassGrade">
-    <ChildElement name="StudentDic" isAttribute="False" elementType="Dictionary" referenceType="Custom" keyType="Int" customType="1" defaultValue="" />
+    <ChildElement name="Students" isAttribute="False" elementType="List" referenceType="Custom" keyType="Int" customType="1" defaultValue="" />
   </CustomElement>
   <CustomElement name="Student">
     <ChildElement name="Name" isAttribute="True" elementType="String" referenceType="String" keyType="String" customType="0" defaultValue="" />
