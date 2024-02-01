@@ -51,6 +51,7 @@ namespace XmlDesigner
             codeWriter.Dispose();
         }
 
+
         public static void ExportSerializedClass(string folderPath, RootElement rootElement)
         {
             var rootCode = new RootCode()
@@ -110,8 +111,29 @@ namespace XmlDesigner
                                         function.Custom("return null;");
                                     });
                                 classScope.EmptyLine();
+
+                                //写入xml
+                                classScope.CustomScope(
+                                    $"public static void ExportXml({rootElement.Name} {rootElement.Name.LowerFirstLetter()}, string exportFolder, string xmlName)",
+                                    false,
+                                    function =>
+                                    {
+                                        function.CustomScope($"if ({rootElement.Name.LowerFirstLetter()} == null)",
+                                            false,
+                                            ccs =>
+                                            {
+                                                ccs.Custom($"导出失败,{rootElement.Name.LowerFirstLetter()}为空,请检查！");
+                                                ccs.Custom("return;");
+                                            });
+                                        function.Custom("var doc = new XmlDocument();")
+                                            .Custom("doc.CreateXmlDeclaration(\"1.0\", \"utf - 8\", null);");
+                                        function.Custom($"var rootElement = doc.CreateElement(\"{rootElement.Name}\")");
+                                    });
+
                                 //类解析
                                 CreateClassSerialize(classScope, rootElement);
+                                //类写入
+                                CreateClassWriter(classScope, rootElement);
                             });
                     });
 
@@ -122,6 +144,8 @@ namespace XmlDesigner
             rootCode.Gen(codeWriter);
             codeWriter.Dispose();
         }
+
+        #region 解析方法
 
         private static string GetElementTypeName(this ChildElement childElement, RootElement rootElement)
         {
@@ -236,7 +260,7 @@ namespace XmlDesigner
 
         private static void CreateClassSerialize(ICodeScope classScope, RootElement rootElement)
         {
-            classScope.CustomScope($"public static {rootElement.Name} Get{rootElement.Name}Data(XmlNode node)", false,
+            classScope.CustomScope($"private static {rootElement.Name} Get{rootElement.Name}Data(XmlNode node)", false,
                 function =>
                 {
                     function.Custom(
@@ -287,7 +311,7 @@ namespace XmlDesigner
             foreach (var customElement in rootElement.CustomElements)
             {
                 classScope.CustomScope(
-                    $"public static {customElement.Name} Get{customElement.Name}Data(XmlNode node)", false,
+                    $"private static {customElement.Name} Get{customElement.Name}Data(XmlNode node)", false,
                     function =>
                     {
                         function.Custom(
@@ -605,5 +629,93 @@ namespace XmlDesigner
                 self.TabCustom(elementStr);
             }
         }
+
+        #endregion
+
+        #region 导出xml方法
+
+        private static void CreateClassWriter(ICodeScope classScope, RootElement rootElement)
+        {
+            classScope.CustomScope(
+                $"private static XmlNode GetNodeFrom{rootElement.Name}(XmlDocument doc, {rootElement.Name} {rootElement.Name.LowerFirstLetter()})",
+                false,
+                function =>
+                {
+                    //根节点
+                    function.Custom($"var rootNode = doc.CreateElement(\"{rootElement.Name}\")")
+                        .EmptyLine();
+                    foreach (var childElement in rootElement.ChildElements.Where(
+                                 element =>
+                                     element.IsAttribute))
+                    {
+                        function.Custom(
+                                $"var {childElement.Name.LowerFirstLetter()}Ab = doc.CreateAttribute(\"{childElement.Name}\")")
+                            .Custom(
+                                $"{childElement.Name.LowerFirstLetter()}Ab.InnerText = {childElement.EndOfAttributeElement(rootElement)}")
+                            .Custom($"rootNode.SetAttributeNode({childElement.Name.LowerFirstLetter()}Ab)")
+                            .EmptyLine();
+                    }
+
+                    foreach (var childElement in rootElement.ChildElements.Where(
+                                 element =>
+                                     !element.IsAttribute))
+                    {
+                        //todo 完善导出
+                    }
+
+                });
+        }
+
+        private static string EndOfAttributeElement(this ChildElement childElement, RootElement rootElement)
+        {
+            string endStr;
+            switch (childElement.ElementType)
+            {
+                case ElementType.String:
+                    endStr = $"{rootElement.Name.LowerFirstLetter()}.{childElement.Name.LowerFirstLetter()};";
+                    break;
+                case ElementType.Bool:
+                    endStr =
+                        $"{rootElement.Name.LowerFirstLetter()}.{childElement.Name.LowerFirstLetter()}.ToString();";
+                    break;
+                case ElementType.Int:
+                    endStr =
+                        $"{rootElement.Name.LowerFirstLetter()}.{childElement.Name.LowerFirstLetter()}.ToString();";
+                    break;
+                case ElementType.Double:
+                    endStr =
+                        $"{rootElement.Name.LowerFirstLetter()}.{childElement.Name.LowerFirstLetter()}.ToString();";
+                    break;
+                case ElementType.Float:
+                    endStr =
+                        $"{rootElement.Name.LowerFirstLetter()}.{childElement.Name.LowerFirstLetter()}.ToString();";
+                    break;
+                case ElementType.List:
+                    endStr = "\"\";";
+                    break;
+                case ElementType.Queue:
+                    endStr = "\"\";";
+                    break;
+                case ElementType.Stack:
+                    endStr = "\"\";";
+                    break;
+                case ElementType.HashSet:
+                    endStr = "\"\";";
+                    break;
+                case ElementType.Dictionary:
+                    endStr = "\"\";";
+                    break;
+                case ElementType.Custom:
+                    endStr = "\"\";";
+                    break;
+                default:
+                    endStr = string.Empty;
+                    break;
+            }
+
+            return endStr;
+        }
+
+        #endregion
     }
 }
