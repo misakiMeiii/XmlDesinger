@@ -1,0 +1,21 @@
+<School>
+    <ClassGradeDic>
+        <ClassGradeDicKey>1</ClassGradeDicKey>
+        <ClassGradeDicValue ClassName="一班">
+            <HeadTeacher Name="李老师" Age="28" Sex="男" Subject="数学"/>
+            <Students Name="张三" Age="16" Sex="男"/>
+            <Students Name="李四" Age="17" Sex="男"/>
+            <Students Name="韩梅梅" Age="16" Sex="女"/>
+        </ClassGradeDicValue>
+    </ClassGradeDic>
+
+    <ClassGradeDic>
+        <ClassGradeDicKey>2</ClassGradeDicKey>
+        <ClassGradeDicValue ClassName="二班">
+            <HeadTeacher Name="张老师" Age="30" Sex="女" Subject="语文"/>
+            <Students Name="李华" Age="17" Sex="男"/>
+            <Students Name="马丽" Age="16" Sex="女"/>
+            <Students Name="王五" Age="16" Sex="男"/>
+        </ClassGradeDicValue>
+    </ClassGradeDic>
+</School>

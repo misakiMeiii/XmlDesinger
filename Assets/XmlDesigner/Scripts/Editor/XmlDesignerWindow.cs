@@ -431,7 +431,7 @@ namespace XmlDesigner
             {
                 if (GUILayout.Button("读取设计文件", GUILayout.Width(100), GUILayout.Height(30)))
                 {
-                    var filePath = EditorUtility.OpenFilePanel("读取设计文件", "", "xml");
+                    var filePath = EditorUtility.OpenFilePanel("读取设计文件", Application.dataPath, "xml");
                     LoadDesignFile(filePath);
                 }
 

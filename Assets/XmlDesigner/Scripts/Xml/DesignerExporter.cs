@@ -68,7 +68,7 @@ namespace XmlDesigner
         private static XmlNode CreateChildNode(this ChildElement childElement, XmlDocument doc)
         {
             var childNode = doc.CreateElement("ChildElement");
-
+            
             var nameAb = doc.CreateAttribute("name");
             nameAb.InnerText = childElement.Name;
             childNode.SetAttributeNode(nameAb);

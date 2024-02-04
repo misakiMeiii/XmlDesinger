@@ -384,7 +384,7 @@ namespace XmlDesigner
         public static string GetSelectedFolderPath(this string originStr)
         {
             // 打开一个文件夹选择对话框，并返回选定的文件夹路径
-            var path = EditorUtility.OpenFolderPanel("选择文件夹", "", "");
+            var path = EditorUtility.OpenFolderPanel("选择文件夹", string.IsNullOrEmpty(originStr) ? "" : originStr, "");
             return string.IsNullOrEmpty(path) ? originStr : path;
         }
 #endif

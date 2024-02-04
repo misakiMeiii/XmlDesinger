@@ -2,13 +2,21 @@
 <RootClass>
   <Name>School</Name>
   <NameSpace>XML</NameSpace>
-  <ChildElement name="ClassDic" isAttribute="False" elementType="Dictionary" referenceType="Custom" keyType="Int" customType="0" defaultValue="" />
+  <ChildElement name="ClassGradeDic" isAttribute="False" elementType="Dictionary" referenceType="Custom" keyType="Int" customType="0" defaultValue="" />
   <CustomElement name="ClassGrade">
+    <ChildElement name="ClassName" isAttribute="True" elementType="String" referenceType="String" keyType="String" customType="0" defaultValue="" />
+    <ChildElement name="HeadTeacher" isAttribute="False" elementType="Custom" referenceType="String" keyType="String" customType="2" defaultValue="" />
     <ChildElement name="Students" isAttribute="False" elementType="List" referenceType="Custom" keyType="Int" customType="1" defaultValue="" />
   </CustomElement>
   <CustomElement name="Student">
     <ChildElement name="Name" isAttribute="True" elementType="String" referenceType="String" keyType="String" customType="0" defaultValue="" />
     <ChildElement name="Age" isAttribute="True" elementType="Int" referenceType="String" keyType="String" customType="0" defaultValue="16" />
     <ChildElement name="Sex" isAttribute="True" elementType="String" referenceType="String" keyType="String" customType="0" defaultValue="男" />
+  </CustomElement>
+  <CustomElement name="Teacher">
+    <ChildElement name="Name" isAttribute="True" elementType="String" referenceType="String" keyType="String" customType="0" defaultValue="" />
+    <ChildElement name="Age" isAttribute="True" elementType="Int" referenceType="String" keyType="String" customType="0" defaultValue="0" />
+    <ChildElement name="Sex" isAttribute="True" elementType="String" referenceType="String" keyType="String" customType="0" defaultValue="" />
+    <ChildElement name="Subject" isAttribute="True" elementType="String" referenceType="String" keyType="String" customType="0" defaultValue="" />
   </CustomElement>
 </RootClass>
