@@ -279,11 +279,7 @@ namespace XmlDesigner
                             function.Custom(
                                 $"attr = node.Attributes[\"{childElement.Name}\"];");
                             function.CustomScope("if (attr != null)", false,
-                                css =>
-                                {
-                                    css.Custom(childElement.AttributeElementSerialize(
-                                        rootElement));
-                                });
+                                css => { css.AttributeElementSerialize(childElement, rootElement); });
                         }
                     }
 
@@ -330,11 +326,7 @@ namespace XmlDesigner
                                 function.Custom(
                                     $"attr = node.Attributes[\"{childElement.Name}\"];");
                                 function.CustomScope("if (attr != null)", false,
-                                    css =>
-                                    {
-                                        css.Custom(childElement.AttributeElementSerialize(
-                                            customElement));
-                                    });
+                                    css => { css.AttributeElementSerialize(childElement, customElement); });
                             }
                         }
 
@@ -365,89 +357,68 @@ namespace XmlDesigner
             }
         }
 
-        private static string AttributeElementSerialize(this ChildElement childElement, AbstractElement parentElement)
+        private static void AttributeElementSerialize(this ICodeScope self, ChildElement childElement,
+            AbstractElement parentElement)
         {
-            string elementStr;
             switch (childElement.ElementType)
             {
                 case ElementType.String:
-                    elementStr = $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = attr.Value;";
+                    self.Custom($"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = attr.Value;");
                     break;
-                case ElementType.Bool:
-                    elementStr =
-                        $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = Convert.ToBoolean(attr.Value);;";
+                case >= ElementType.Bool and < ElementType.List:
+                    self.Custom(
+                            $"if(!{childElement.ElementType.ToString().ToLower()}.TryParse(attr.Value, out {parentElement.Name.LowerFirstLetter()}.{childElement.Name}))")
+                        .TabCustom(
+                            $"Debug.LogError($\"无法将 {childElement.Name} 转换为 {childElement.ElementType.ToString().ToLower()}: {{attr.Value}}. 出错节点: {{node.Name}}, 完整 XML: {{node.OuterXml}}\");");
+
                     break;
-                case ElementType.Int:
-                    elementStr =
-                        $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = Convert.ToInt32(attr.Value);;";
-                    break;
-                case ElementType.Double:
-                    elementStr =
-                        $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = Convert.ToDouble(attr.Value);";
-                    break;
-                case ElementType.Float:
-                    elementStr =
-                        $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = Convert.ToSingle(attr.Value);";
+                case >= ElementType.List:
                     break;
                 default:
-                    return string.Empty;
+                    throw new ArgumentOutOfRangeException();
             }
-
-            return elementStr;
         }
 
         private static void NodeElementSerialize(this ICodeScope self, ChildElement childElement,
             AbstractElement parentElement,
             RootElement rootElement)
         {
-            var elementStr = string.Empty;
             switch (childElement.ElementType)
             {
                 case ElementType.String:
-                    elementStr = $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = childNode.InnerXml;";
+                    self.TabCustom(
+                        $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = childNode.InnerXml;");
                     break;
-                case ElementType.Bool:
-                    elementStr =
-                        $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = Convert.ToBoolean(childNode.InnerXml);";
-                    break;
-                case ElementType.Int:
-                    elementStr =
-                        $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = Convert.ToInt32(childNode.InnerXml);";
-                    break;
-                case ElementType.Double:
-                    elementStr =
-                        $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = Convert.ToDouble(childNode.InnerXml);";
-                    break;
-                case ElementType.Float:
-                    elementStr =
-                        $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = Convert.ToSingle(childNode.InnerXml);";
+                case >= ElementType.Bool and < ElementType.List:
+                    self.TabCustom(
+                            $"if(!{childElement.ElementType.ToString().ToLower()}.TryParse(childNode.InnerXml, out {parentElement.Name.LowerFirstLetter()}.{childElement.Name}))")
+                        .TabCustom(
+                            $"\tDebug.LogError($\"无法将 {childElement.Name} 转换为 {childElement.ElementType.ToString().ToLower()}: {{childNode.InnerXml}}. 出错节点: {{childNode.Name}}, 完整 XML: {{childNode.OuterXml}}\");")
+                        ;
                     break;
                 case ElementType.List:
                     switch (childElement.ReferenceType)
                     {
                         case BaseType.String:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(childNode.InnerXml);";
+                            self.TabCustom(
+                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(childNode.InnerXml);");
                             break;
-                        case BaseType.Bool:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToBoolean(childNode.InnerXml));";
-                            break;
-                        case BaseType.Int:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToInt32(childNode.InnerXml));";
-                            break;
-                        case BaseType.Double:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToDouble(childNode.InnerXml));";
-                            break;
-                        case BaseType.Float:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToSingle(childNode.InnerXml));";
+                        case >= BaseType.Bool and < BaseType.Custom:
+                            self.TabCustom(
+                                    $"if(!{childElement.ReferenceType.ToString().ToLower()}.TryParse(childNode.InnerXml, out var {childElement.Name.LowerFirstLetter()}))")
+                                .TabCustom("{")
+                                .TabCustom(
+                                    $"\tDebug.LogError($\"无法将 {childElement.Name} 转换为 {childElement.ReferenceType.ToString().ToLower()}: {{childNode.InnerXml}}. 出错节点: {{childNode.Name}}, 完整 XML: {{childNode.OuterXml}}\");")
+                                .TabCustom("}")
+                                .TabCustom("else")
+                                .TabCustom("{")
+                                .TabCustom(
+                                    $"\t{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add({childElement.Name.LowerFirstLetter()});")
+                                .TabCustom("}");
                             break;
                         case BaseType.Custom:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode));";
+                            self.TabCustom(
+                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode));");
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -458,28 +429,25 @@ namespace XmlDesigner
                     switch (childElement.ReferenceType)
                     {
                         case BaseType.String:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(childNode.InnerXml);";
+                            self.TabCustom(
+                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(childNode.InnerXml);");
                             break;
-                        case BaseType.Bool:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(Convert.ToBoolean(childNode.InnerXml));";
-                            break;
-                        case BaseType.Int:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(Convert.ToInt32(childNode.InnerXml));";
-                            break;
-                        case BaseType.Double:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(Convert.ToDouble(childNode.InnerXml));";
-                            break;
-                        case BaseType.Float:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(Convert.ToSingle(childNode.InnerXml));";
+                        case >= BaseType.Bool and < BaseType.Custom:
+                            self.TabCustom(
+                                    $"if(!{childElement.ReferenceType.ToString().ToLower()}.TryParse(childNode.InnerXml, out var {childElement.Name.LowerFirstLetter()}))")
+                                .TabCustom("{")
+                                .TabCustom(
+                                    $"\tDebug.LogError($\"无法将 {childElement.Name} 转换为 {childElement.ReferenceType.ToString().ToLower()}: {{childNode.InnerXml}}. 出错节点: {{childNode.Name}}, 完整 XML: {{childNode.OuterXml}}\");")
+                                .TabCustom("}")
+                                .TabCustom("else")
+                                .TabCustom("{")
+                                .TabCustom(
+                                    $"\t{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue({childElement.Name.LowerFirstLetter()});")
+                                .TabCustom("}");
                             break;
                         case BaseType.Custom:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode));";
+                            self.TabCustom(
+                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Enqueue(Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode));");
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -490,28 +458,25 @@ namespace XmlDesigner
                     switch (childElement.ReferenceType)
                     {
                         case BaseType.String:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(childNode.InnerXml);";
+                            self.TabCustom(
+                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(childNode.InnerXml);");
                             break;
-                        case BaseType.Bool:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(Convert.ToBoolean(childNode.InnerXml));";
-                            break;
-                        case BaseType.Int:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(Convert.ToInt32(childNode.InnerXml));";
-                            break;
-                        case BaseType.Double:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(Convert.ToDouble(childNode.InnerXml));";
-                            break;
-                        case BaseType.Float:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(Convert.ToSingle(childNode.InnerXml));";
+                        case >= BaseType.Bool and < BaseType.Custom:
+                            self.TabCustom(
+                                    $"if(!{childElement.ReferenceType.ToString().ToLower()}.TryParse(childNode.InnerXml, out var {childElement.Name.LowerFirstLetter()}))")
+                                .TabCustom("{")
+                                .TabCustom(
+                                    $"\tDebug.LogError($\"无法将 {childElement.Name} 转换为 {childElement.ReferenceType.ToString().ToLower()}: {{childNode.InnerXml}}. 出错节点: {{childNode.Name}}, 完整 XML: {{childNode.OuterXml}}\");")
+                                .TabCustom("}")
+                                .TabCustom("else")
+                                .TabCustom("{")
+                                .TabCustom(
+                                    $"\t{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Push({childElement.Name.LowerFirstLetter()});")
+                                .TabCustom("}");
                             break;
                         case BaseType.Custom:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode));";
+                            self.TabCustom(
+                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Push(Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode));");
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -522,28 +487,25 @@ namespace XmlDesigner
                     switch (childElement.ReferenceType)
                     {
                         case BaseType.String:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(childNode.InnerXml);";
+                            self.TabCustom(
+                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(childNode.InnerXml);");
                             break;
-                        case BaseType.Bool:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToBoolean(childNode.InnerXml));";
-                            break;
-                        case BaseType.Int:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToInt32(childNode.InnerXml));";
-                            break;
-                        case BaseType.Double:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToDouble(childNode.InnerXml));";
-                            break;
-                        case BaseType.Float:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Convert.ToSingle(childNode.InnerXml));";
+                        case >= BaseType.Bool and < BaseType.Custom:
+                            self.TabCustom(
+                                    $"if(!{childElement.ReferenceType.ToString().ToLower()}.TryParse(childNode.InnerXml, out var {childElement.Name.LowerFirstLetter()}))")
+                                .TabCustom("{")
+                                .TabCustom(
+                                    $"\tDebug.LogError($\"无法将 {childElement.Name} 转换为 {childElement.ReferenceType.ToString().ToLower()}: {{childNode.InnerXml}}. 出错节点: {{childNode.Name}}, 完整 XML: {{childNode.OuterXml}}\");")
+                                .TabCustom("}")
+                                .TabCustom("else")
+                                .TabCustom("{")
+                                .TabCustom(
+                                    $"\t{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add({childElement.Name.LowerFirstLetter()});")
+                                .TabCustom("}");
                             break;
                         case BaseType.Custom:
-                            elementStr =
-                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode));";
+                            self.TabCustom(
+                                $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name}.Add(Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode));");
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -609,16 +571,11 @@ namespace XmlDesigner
 
                     break;
                 case ElementType.Custom:
-                    elementStr =
-                        $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode);";
+                    self.TabCustom(
+                        $"{parentElement.Name.LowerFirstLetter()}.{childElement.Name} = Get{rootElement.CustomElementNames[childElement.CustomType]}Data(childNode);");
                     break;
                 default:
-                    return;
-            }
-
-            if (childElement.ElementType != ElementType.Dictionary)
-            {
-                self.TabCustom(elementStr);
+                    throw new ArgumentOutOfRangeException();
             }
         }
 

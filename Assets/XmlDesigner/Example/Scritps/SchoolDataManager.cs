@@ -114,7 +114,10 @@ namespace XML
 			attr = node.Attributes["Age"];
 			if (attr != null)
 			{
-				student.Age = Convert.ToInt32(attr.Value);;
+				if(!int.TryParse(attr.Value, out student.Age))
+				{
+					Debug.LogError($"无法将 Age 转换为 int: {attr.Value}. 出错节点: {node.Name}, 完整 XML: {node.OuterXml}");
+				}
 			}
 			attr = node.Attributes["Sex"];
 			if (attr != null)
@@ -135,7 +138,10 @@ namespace XML
 			attr = node.Attributes["Age"];
 			if (attr != null)
 			{
-				teacher.Age = Convert.ToInt32(attr.Value);;
+				if(!int.TryParse(attr.Value, out teacher.Age))
+				{
+					Debug.LogError($"无法将 Age 转换为 int: {attr.Value}. 出错节点: {node.Name}, 完整 XML: {node.OuterXml}");
+				}
 			}
 			attr = node.Attributes["Sex"];
 			if (attr != null)
