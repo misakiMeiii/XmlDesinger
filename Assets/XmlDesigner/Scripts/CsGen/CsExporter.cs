@@ -156,20 +156,8 @@ namespace XmlDesigner
             string elementStr;
             switch (childElement.ElementType)
             {
-                case ElementType.String:
-                    elementStr = "string";
-                    break;
-                case ElementType.Bool:
-                    elementStr = "bool";
-                    break;
-                case ElementType.Int:
-                    elementStr = "int";
-                    break;
-                case ElementType.Double:
-                    elementStr = "double";
-                    break;
-                case ElementType.Float:
-                    elementStr = "float";
+                case <= ElementType.Float:
+                    elementStr = childElement.ElementType.ToString().ToLower();
                     break;
                 case ElementType.List:
                     elementStr = $"List<{childElement.GetReferenceTypeName(rootElement)}>";
@@ -543,9 +531,21 @@ namespace XmlDesigner
                         case BaseType.String:
                             valueContent = $"childNode.SelectSingleNode(\"{childElement.Name}Value\").InnerText;";
                             break;
-                        case > BaseType.String and < BaseType.Custom:
+                        case BaseType.Bool:
                             valueContent =
                                 $"Convert.ToBoolean(childNode.SelectSingleNode(\"{childElement.Name}Value\").InnerText);";
+                            break;
+                        case BaseType.Int:
+                            valueContent =
+                                $"Convert.ToInt32(childNode.SelectSingleNode(\"{childElement.Name}Value\").InnerText);";
+                            break;
+                        case BaseType.Double:
+                            valueContent =
+                                $"Convert.ToDouble(childNode.SelectSingleNode(\"{childElement.Name}Value\").InnerText);";
+                            break;
+                        case BaseType.Float:
+                            valueContent =
+                                $"Convert.ToSingle(childNode.SelectSingleNode(\"{childElement.Name}Value\").InnerText);";
                             break;
                         case BaseType.Custom:
                             valueContent =
