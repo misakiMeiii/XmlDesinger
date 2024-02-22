@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEditor;
-using UnityEditor.AnimatedValues;
 using UnityEngine;
 using UnityEngine.Events;
+
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.AnimatedValues;
+#endif
 
 namespace XmlDesigner
 {
@@ -157,6 +160,27 @@ namespace XmlDesigner
 
             return string.Format("0{0}0{0}0{0}0", split);
         }
+        
+        public static int ToInt(this string selfStr, int defaultValue = 0)
+        {
+            return int.TryParse(selfStr, out var retValue) ? retValue : defaultValue;
+        }
+
+        public static float ToFloat(this string selfStr, float defaultValue = 0)
+        {
+            return float.TryParse(selfStr, out var retValue) ? retValue : defaultValue;
+        }
+
+        public static double ToDouble(this string selfStr, double defaultValue = 0)
+        {
+            return double.TryParse(selfStr, out var retValue) ? retValue : defaultValue;
+        }
+
+        public static bool ToBool(this string selfStr, bool defaultValue = false)
+        {
+            return bool.TryParse(selfStr, out var retValue) ? retValue : defaultValue;
+        }
+
 
         /// <summary>
         /// 获取当前选择物体路径
@@ -186,28 +210,6 @@ namespace XmlDesigner
 
             return str;
         }
-
-
-        public static int ToInt(this string selfStr, int defaultValue = 0)
-        {
-            return int.TryParse(selfStr, out var retValue) ? retValue : defaultValue;
-        }
-
-        public static float ToFloat(this string selfStr, float defaultValue = 0)
-        {
-            return float.TryParse(selfStr, out var retValue) ? retValue : defaultValue;
-        }
-
-        public static double ToDouble(this string selfStr, double defaultValue = 0)
-        {
-            return double.TryParse(selfStr, out var retValue) ? retValue : defaultValue;
-        }
-
-        public static bool ToBool(this string selfStr, bool defaultValue = false)
-        {
-            return bool.TryParse(selfStr, out var retValue) ? retValue : defaultValue;
-        }
-
         public static string GetCurrentGameObjectWorldPosition(string str)
         {
             var objs = Selection.objects;
